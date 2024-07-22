@@ -2,6 +2,7 @@ package com.friendgit.api.service;
 
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +26,11 @@ public class StorageService {
         }
 
         return pathToSave.toString();
+    }
+
+    public byte[] readFile(String fileName) throws IOException {
+        Path pathToRead = Paths.get(ROOT_REPOSITORY, fileName);
+        return Files.readAllBytes(pathToRead);
     }
 
     private void createDirectory(Path dirPath) throws Exception {

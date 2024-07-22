@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
-
 @Service
 public class MediaService {
 
@@ -33,6 +33,9 @@ public class MediaService {
         }
     }
 
+    public byte[] getMediaFile(String fileName) throws IOException {
+        return storageService.readFile(fileName);
+    }
     // kiểm tra phần định dạng file ví dụ .pdf,.doc
     private String getFileExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
