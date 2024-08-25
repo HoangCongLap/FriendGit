@@ -1,10 +1,12 @@
 package com.friendgit.api.controller;
 
+import com.friendgit.api.exception.handleOrThrowException;
 import com.friendgit.api.model.Response;
 import com.friendgit.api.service.MediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,17 +27,30 @@ public class WriteFileController {
     }
 
     @RequestMapping(value = "/upload/file", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Response> uploadFileNew(@RequestParam("file") MultipartFile file) throws Exception {
+    public ResponseEntity<Response> uploadFileNew(@RequestParam("file") MultipartFile file, @RequestParam("userId") String userId) throws Exception {
+        try {
+            String path = mediaService.saveMediaFile(file, userId);
 
-        String path = mediaService.saveMediaFile(file);
-
-        Response response = Response.builder()
-                .code("SUCCESS_CODE")
-                .message("File uploaded successfully")
-                .data(path)
-                .build();
-
-        return ResponseEntity.ok(response);
+            Response response = Response.builder()
+                    .code("SUCCESS_CODE")
+                    .message("File uploaded successfully")
+                    .data(path)
+                    .build();
+            System.out.println("uploadFile: " + response);
+            return ResponseEntity.ok(response);
+        } catch (handleOrThrowException ex) {
+            Response response = Response.builder()
+                    .code("ERROR_CODE")
+                    .message(ex.getMessage())
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception ex) {
+            Response response = Response.builder()
+                    .code("ERROR_CODE")
+                    .message("File upload failed: " + ex.getMessage())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     @RequestMapping(value = "/download/file/{fileName}", method = RequestMethod.GET)
