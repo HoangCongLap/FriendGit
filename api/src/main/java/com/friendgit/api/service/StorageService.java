@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
-import java.util.Optional;
 
 @Service
 public class StorageService {
@@ -24,7 +23,7 @@ public class StorageService {
     @Autowired
     private FileRepository fileRepository;
 
-    public String writeFile(String userId, String fileName, InputStream file, String fileExtension) throws Exception {
+    public String writeFile(String projectId, String userId, String fileName, InputStream file, String fileExtension) throws Exception {
         if (userId == null || userId.trim().isEmpty()) {
             throw new handleOrThrowException("User ID must not be empty");
         }
@@ -52,16 +51,14 @@ public class StorageService {
             Date createdAt = new Date();
             String modifiedByUserId = null;
 
-            Optional<File> existingFile = fileRepository.findByFileNameAndCreatedByUserId(fileName, userId);
-
-            if (existingFile.isPresent()) {
+            boolean isFileExists = fileRepository.existsByProjectIdAndFileName(projectId, fileName).isPresent();
+            if (isFileExists) {
                 modifiedByUserId = userId;
             }
-
             Files.write(pathToSave, bytes);
 
-            createFile(fileName, size, userId, modifiedByUserId, pathToSave, createdAt);
-            System.out.println(createFile(fileName, size, userId, modifiedByUserId, pathToSave, createdAt));
+            File fileEntity = createFile(projectId, fileName, size, userId, modifiedByUserId, pathToSave, createdAt);
+            System.out.println(fileEntity);
         } catch (Exception e) {
             throw new handleOrThrowException("An error while saving the file: " + e.getMessage(), e);
         }
@@ -80,9 +77,10 @@ public class StorageService {
         }
     }
 
-    private File createFile(String fileName, String size, String createdByUserId, String modifiedByUserId, Path
+    private File createFile(String projectId, String fileName, String size, String createdByUserId, String modifiedByUserId, Path
             pathToSave, Date createdAt) {
         File file = new File();
+        file.setProjectId(projectId);
         file.setFileName(fileName);
         file.setSize(size);
         file.setCreatedByUserId(createdByUserId);
@@ -92,7 +90,4 @@ public class StorageService {
         return fileRepository.save(file);
     }
 
-    Optional<File> findById(String fileId) {
-        return fileRepository.findById(fileId);
-    }
 }

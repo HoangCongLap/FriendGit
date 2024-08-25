@@ -18,7 +18,6 @@ import java.io.IOException;
 @RequestMapping("/user")
 public class WriteFileController {
 
-    private static final String ROOTT_REPOSITORY = "C:/Users/Hoang Cong Lap/Desktop/test";
     private final MediaService mediaService;
 
     @Autowired
@@ -27,9 +26,10 @@ public class WriteFileController {
     }
 
     @RequestMapping(value = "/upload/file", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Response> uploadFileNew(@RequestParam("file") MultipartFile file, @RequestParam("userId") String userId) throws Exception {
+    public ResponseEntity<Response> uploadFileNew(@RequestParam("file") MultipartFile file, @RequestParam("userId") String userId,
+                                                  @RequestParam("projectId") String projectId) throws Exception {
         try {
-            String path = mediaService.saveMediaFile(file, userId);
+            String path = mediaService.saveMediaFile(projectId, file, userId);
 
             Response response = Response.builder()
                     .code("SUCCESS_CODE")

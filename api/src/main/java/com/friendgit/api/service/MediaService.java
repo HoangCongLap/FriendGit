@@ -17,7 +17,7 @@ public class MediaService {
         this.storageService = storageService;
     }
 
-    public String saveMediaFile(MultipartFile file, String userId) throws Exception {
+    public String saveMediaFile(String projectId, MultipartFile file, String userId) throws Exception {
 
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null) {
@@ -29,7 +29,7 @@ public class MediaService {
 
         try (InputStream inputStream = file.getInputStream()) {
 
-            return storageService.writeFile(userId, fileName, inputStream, fileExtension);
+            return storageService.writeFile(projectId, userId, fileName, inputStream, fileExtension);
         }
     }
 

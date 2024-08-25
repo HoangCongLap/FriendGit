@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface FileRepository extends MongoRepository<File, String> {
-    Optional<File> findByFileNameAndCreatedByUserId(String fileId, String createdByUserId);
+    Optional<File> existsByProjectIdAndFileName(String projectId, String fileName);
 }
