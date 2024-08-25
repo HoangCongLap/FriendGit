@@ -2,9 +2,11 @@ package com.friendgit.api.entity;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -15,13 +17,26 @@ import java.util.Date;
 @NoArgsConstructor
 @Document(collection = "file")
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class File {
     @Field("file_name")
-    private String fileName;
+    String fileName;
+
+    @Field("size")
+    String size;
+
+    @Field("create_by_user_id")
+    String createdByUserId;
+
+    @Field("modified_by_user_id")
+    String modifiedByUserId;
+
     @Field("file_path")
-    private String filePath;
-    @Field("version_id")
-    private String versionId;
+    String path;
+
     @Field("create_at")
-    private Date createAt;
+    Date createAt;
+
+    @Field("create_date")
+    Date createdUpDate;
 }
