@@ -51,7 +51,7 @@ public class StorageService {
             Date createdAt = new Date();
             String modifiedByUserId = null;
 
-            boolean isFileExists = fileRepository.existsByProjectIdAndFileName(projectId, fileName).isPresent();
+            boolean isFileExists = fileRepository.existsByProjectIdAndFileName(projectId, fileName);
             if (isFileExists) {
                 modifiedByUserId = userId;
             }
