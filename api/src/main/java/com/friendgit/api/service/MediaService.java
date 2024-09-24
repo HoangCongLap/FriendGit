@@ -1,5 +1,6 @@
 package com.friendgit.api.service;
 
+import com.friendgit.api.model.FileRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,8 +34,8 @@ public class MediaService {
         }
     }
 
-    public byte[] getMediaFile(String fileName) throws IOException {
-        return storageService.readFile(fileName);
+    public byte[] getMediaFile(FileRequest request) throws IOException {
+        return storageService.readFile(request);
     }
 
     private String getFileExtension(String fileName) {

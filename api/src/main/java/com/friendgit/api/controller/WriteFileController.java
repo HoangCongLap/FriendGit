@@ -1,8 +1,10 @@
 package com.friendgit.api.controller;
 
 import com.friendgit.api.exception.handleOrThrowException;
+import com.friendgit.api.model.FileRequest;
 import com.friendgit.api.model.Response;
 import com.friendgit.api.service.MediaService;
+import com.friendgit.api.urls.Path;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -15,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping(Path.File.FILE)
 public class WriteFileController {
 
     private final MediaService mediaService;
@@ -25,7 +27,7 @@ public class WriteFileController {
         this.mediaService = mediaService;
     }
 
-    @RequestMapping(value = "/upload/file", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequestMapping(value = Path.File.UPLOAD, method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response> uploadFileNew(@RequestParam("file") MultipartFile file, @RequestParam("userId") String userId,
                                                   @RequestParam("projectId") String projectId) throws Exception {
         try {
@@ -53,14 +55,20 @@ public class WriteFileController {
         }
     }
 
-    @RequestMapping(value = "/download/file/{fileName}", method = RequestMethod.GET)
-    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable String fileName) throws IOException {
-        byte[] data = mediaService.getMediaFile(fileName);
+    @RequestMapping(value = Path.File.DOWNLOAD, method = RequestMethod.POST)
+    public ResponseEntity<ByteArrayResource> downloadFile(
+            @RequestBody FileRequest request) throws IOException {
+
+        byte[] data = mediaService.getMediaFile(request);
+
+        if (data == null || data.length == 0) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
 
         ByteArrayResource resource = new ByteArrayResource(data);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileName)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + request.getFileName())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .contentLength(data.length)
                 .body(resource);
