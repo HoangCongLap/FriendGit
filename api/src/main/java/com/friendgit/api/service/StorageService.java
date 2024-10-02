@@ -2,6 +2,7 @@ package com.friendgit.api.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.friendgit.api.Util.ZipUtil;
 import com.friendgit.api.entity.File;
 import com.friendgit.api.exception.handleOrThrowException;
 import com.friendgit.api.model.FileRequest;
@@ -44,9 +45,9 @@ public class StorageService {
         createDirectory(pathToSave.getParent());
 
         try {
-            byte[] bytes = file.readAllBytes();
+            ZipUtil.zipFile(file, pathToSave, fullFileName);
 
-            String size = String.valueOf(bytes.length);
+            String size = String.valueOf(Files.size(pathToSave));
 
             Date createdAt = new Date();
             String modifiedByUserId = null;
@@ -55,7 +56,6 @@ public class StorageService {
             if (isFileExists) {
                 modifiedByUserId = userId;
             }
-            Files.write(pathToSave, bytes);
 
             File fileEntity = createFile(projectId, fileName, size, userId, modifiedByUserId, pathToSave, createdAt);
             System.out.println(fileEntity);
@@ -82,7 +82,7 @@ public class StorageService {
 
                 Path pathToRead = Paths.get(fullPath);
                 if (Files.exists(pathToRead) && Files.isReadable(pathToRead)) {
-                    return Files.readAllBytes(pathToRead);
+                    return ZipUtil.unzipFile(pathToRead);
                 } else {
                     throw new IOException("File does not exist or is not readable: " + pathToRead);
                 }
