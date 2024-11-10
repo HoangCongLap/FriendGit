@@ -3,30 +3,62 @@ package com.friendgit.api.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.friendgit.api.Util.ZipUtil;
-import com.friendgit.api.entity.File;
+import com.friendgit.api.entity.FileEntity;
 import com.friendgit.api.exception.handleOrThrowException;
 import com.friendgit.api.model.FileRequest;
+import com.friendgit.api.model.Project;
 import com.friendgit.api.repository.FileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
-public class StorageService {
+public class FileService {
 
     @Value("${root.repository}")
     private String ROOT_REPOSITORY;
 
     @Autowired
     private FileRepository fileRepository;
+
+    public String saveMediaFile(String projectId, MultipartFile file, String userId) throws Exception {
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+            throw new Exception("File must have a name");
+        }
+
+        String fileExtension = getFileExtension(originalFilename);
+        String fileName = getFileNameWithoutExtension(originalFilename);
+
+        try (InputStream inputStream = file.getInputStream()) {
+
+            return writeFile(projectId, userId, fileName, inputStream, fileExtension);
+        }
+    }
+
+    public byte[] getMediaFile(FileRequest request) throws IOException {
+        return readFile(request);
+    }
+
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex == -1 || dotIndex == fileName.length() - 1) {
+            return "";
+        }
+        return fileName.substring(dotIndex + 1);
+    }
 
     public String writeFile(String projectId, String userId, String fileName, InputStream file, String fileExtension) throws Exception {
         if (userId == null || userId.trim().isEmpty()) {
@@ -40,7 +72,7 @@ public class StorageService {
         String fullFileName = (fileExtension == null || fileExtension.trim().isEmpty())
                 ? fileName
                 : fileName + "." + fileExtension;
-        Path pathToSave = Paths.get(ROOT_REPOSITORY, fullFileName);
+        java.nio.file.Path pathToSave = Paths.get(ROOT_REPOSITORY, fullFileName);
 
         createDirectory(pathToSave.getParent());
 
@@ -57,7 +89,7 @@ public class StorageService {
                 modifiedByUserId = userId;
             }
 
-            File fileEntity = createFile(projectId, fileName, size, userId, modifiedByUserId, pathToSave, createdAt);
+            FileEntity fileEntity = createFile(projectId, fileName, size, userId, modifiedByUserId, pathToSave, createdAt);
             System.out.println(fileEntity);
         } catch (Exception e) {
             throw new handleOrThrowException("An error while saving the file: " + e.getMessage(), e);
@@ -80,7 +112,7 @@ public class StorageService {
                 String fullPath = filePathNode.asText();
                 System.out.println("Path found: " + fullPath);
 
-                Path pathToRead = Paths.get(fullPath);
+                java.nio.file.Path pathToRead = Paths.get(fullPath);
                 if (Files.exists(pathToRead) && Files.isReadable(pathToRead)) {
                     return ZipUtil.unzipFile(pathToRead);
                 } else {
@@ -94,15 +126,15 @@ public class StorageService {
         }
     }
 
-    private void createDirectory(Path dirPath) throws Exception {
+    private void createDirectory(java.nio.file.Path dirPath) throws Exception {
         if (!Files.exists(dirPath)) {
             Files.createDirectories(dirPath);
         }
     }
 
-    private File createFile(String projectId, String fileName, String size, String createdByUserId, String modifiedByUserId, Path
+    private FileEntity createFile(String projectId, String fileName, String size, String createdByUserId, String modifiedByUserId, Path
             pathToSave, Date createdAt) {
-        File file = new File();
+        FileEntity file = new FileEntity();
         file.setProjectId(projectId);
         file.setFileName(fileName);
         file.setSize(size);
@@ -112,5 +144,32 @@ public class StorageService {
         file.setCreateAt(createdAt);
         return fileRepository.save(file);
     }
+
+    private String getFileNameWithoutExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex == -1) {
+            return fileName;
+        }
+        return fileName.substring(0, dotIndex);
+    }
+
+    public List<Project> fetchListFileForProject(String projectId) {
+        List<Project> fileDetails = new ArrayList<>();
+
+        // Query list of files from database based on projectId
+        List<FileEntity> files = fileRepository.findByProjectId(projectId);
+
+        for (FileEntity file : files) {
+            Project project = new Project(
+                    file.getFileName(),
+                    file.getSize(),
+                    file.getPath()
+            );
+            fileDetails.add(project);
+        }
+
+        return fileDetails;
+    }
+
 
 }

@@ -18,7 +18,7 @@ import java.util.Date;
 @Document(collection = "file")
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class File {
+public class FileEntity {
 
     @Field("project_id")
     String projectId;
